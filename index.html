@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Snake Surge</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="hero">
+        <p class="eyebrow">Browser Game</p>
+        <h1>Snake Surge</h1>
+        <p class="hero-copy">
+          一个带霓虹舞台、倒计时开场、合成音效和滑动手势的贪吃蛇小游戏，打开网页就能直接开玩。
+        </p>
+      </section>
+
+      <section class="game-layout">
+        <aside class="panel info-panel">
+          <div class="stat-grid">
+            <article class="stat-card">
+              <span class="stat-label">当前分数</span>
+              <strong id="score">0</strong>
+            </article>
+            <article class="stat-card">
+              <span class="stat-label">历史最高</span>
+              <strong id="best-score">0</strong>
+            </article>
+            <article class="stat-card">
+              <span class="stat-label">速度等级</span>
+              <strong id="speed-level">1</strong>
+            </article>
+            <article class="stat-card">
+              <span class="stat-label">游戏状态</span>
+              <strong id="status-text">待开始</strong>
+            </article>
+          </div>
+
+          <div class="button-row">
+            <button id="start-button" class="action-button primary">开始 / 重开</button>
+            <button id="pause-button" class="action-button secondary">暂停</button>
+            <button id="sound-button" class="action-button secondary">音效：开</button>
+          </div>
+
+          <div class="tips">
+            <h2>操作说明</h2>
+            <p>方向键 / WASD：控制方向</p>
+            <p>空格：暂停或继续</p>
+            <p>Enter：快速重新开始</p>
+            <p>手机端：直接在棋盘区域滑动即可转向</p>
+          </div>
+
+          <div class="tips">
+            <h2>玩法提示</h2>
+            <p>每吃到 5 个果实，速度就会提升一级。</p>
+            <p>撞墙或撞到自己就会结束本局。</p>
+            <p>开局会有倒计时动画，音效可随时开关。</p>
+          </div>
+        </aside>
+
+        <section class="panel stage-panel">
+          <div class="stage-meta">
+            <div>
+              <p class="stage-kicker">Neon Arena</p>
+              <h2>冲刺舞台</h2>
+            </div>
+            <p id="swipe-hint" class="swipe-hint">手机上可直接在棋盘区域滑动转向</p>
+          </div>
+
+          <div class="canvas-frame">
+            <canvas
+              id="game-canvas"
+              width="480"
+              height="480"
+              aria-label="贪吃蛇游戏画布"
+            ></canvas>
+            <div id="overlay" class="overlay visible">
+              <p id="overlay-title">准备开始</p>
+              <p id="overlay-copy">按开始按钮、回车键或点击方向按钮开始游戏</p>
+            </div>
+          </div>
+
+          <div class="touch-controls" aria-label="触屏方向控制">
+            <button class="control-button" data-direction="up">↑</button>
+            <div class="touch-controls-middle">
+              <button class="control-button" data-direction="left">←</button>
+              <button class="control-button accent" data-action="toggle">⏯</button>
+              <button class="control-button" data-direction="right">→</button>
+            </div>
+            <button class="control-button" data-direction="down">↓</button>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="./script.js"></script>
+  </body>
+</html>
