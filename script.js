@@ -1,10 +1,39 @@
 const canvas = document.getElementById("game-canvas");
 const ctx = canvas.getContext("2d");
 const canvasFrame = document.querySelector(".canvas-frame");
+const heroEyebrowElement = document.getElementById("hero-eyebrow");
+const heroCopyElement = document.getElementById("hero-copy");
+const scoreLabelElement = document.getElementById("score-label");
+const bestScoreLabelElement = document.getElementById("best-score-label");
+const speedLevelLabelElement = document.getElementById("speed-level-label");
+const statusLabelElement = document.getElementById("status-label");
 const scoreElement = document.getElementById("score");
 const bestScoreElement = document.getElementById("best-score");
 const speedLevelElement = document.getElementById("speed-level");
 const statusTextElement = document.getElementById("status-text");
+const controlsHeadingElement = document.getElementById("controls-heading");
+const controlTipElements = [
+  document.getElementById("control-tip-1"),
+  document.getElementById("control-tip-2"),
+  document.getElementById("control-tip-3"),
+  document.getElementById("control-tip-4"),
+];
+const hintHeadingElement = document.getElementById("hint-heading");
+const hintTipElements = [
+  document.getElementById("hint-tip-1"),
+  document.getElementById("hint-tip-2"),
+  document.getElementById("hint-tip-3"),
+];
+const settingsKickerElement = document.getElementById("settings-kicker");
+const settingsTitleElement = document.getElementById("settings-title");
+const settingsCopyElement = document.getElementById("settings-copy");
+const settingsNoteElement = document.getElementById("settings-note");
+const languageSettingLabelElement = document.getElementById("language-setting-label");
+const sizeSettingLabelElement = document.getElementById("size-setting-label");
+const speedSettingLabelElement = document.getElementById("speed-setting-label");
+const soundSettingLabelElement = document.getElementById("sound-setting-label");
+const stageKickerElement = document.getElementById("stage-kicker");
+const stageTitleElement = document.getElementById("stage-title");
 const overlayElement = document.getElementById("overlay");
 const overlayTitleElement = document.getElementById("overlay-title");
 const overlayCopyElement = document.getElementById("overlay-copy");
@@ -12,16 +41,17 @@ const swipeHintElement = document.getElementById("swipe-hint");
 const startButton = document.getElementById("start-button");
 const pauseButton = document.getElementById("pause-button");
 const soundButton = document.getElementById("sound-button");
+const languageSelect = document.getElementById("language-select");
+const boardSizeSelect = document.getElementById("board-size-select");
+const speedSelect = document.getElementById("speed-select");
+const soundSelect = document.getElementById("sound-select");
 
 const GRID_SIZE = 20;
 const CELL_SIZE = canvas.width / GRID_SIZE;
-const INITIAL_SPEED = 150;
-const MIN_SPEED = 70;
-const SPEED_STEP = 8;
 const SWIPE_THRESHOLD = 26;
 const BEST_SCORE_KEY = "snake-surge-best-score";
-const SOUND_ENABLED_KEY = "snake-surge-sound-enabled";
-const DEFAULT_SWIPE_HINT = "手机上可直接在棋盘区域滑动转向";
+const SETTINGS_KEY = "snake-surge-settings";
+const LEGACY_SOUND_ENABLED_KEY = "snake-surge-sound-enabled";
 
 const DIRECTIONS = {
   up: { x: 0, y: -1 },
@@ -30,11 +60,247 @@ const DIRECTIONS = {
   right: { x: 1, y: 0 },
 };
 
-const DIRECTION_LABELS = {
-  up: "向上",
-  down: "向下",
-  left: "向左",
-  right: "向右",
+const SPEED_PROFILES = {
+  relaxed: {
+    initial: 178,
+    min: 94,
+    step: 6,
+  },
+  normal: {
+    initial: 150,
+    min: 70,
+    step: 8,
+  },
+  blitz: {
+    initial: 118,
+    min: 54,
+    step: 10,
+  },
+};
+
+const TEXT = {
+  "zh-CN": {
+    htmlLang: "zh-CN",
+    pageTitle: "Snake Surge",
+    heroEyebrow: "Browser Game",
+    heroCopy:
+      "一个带霓虹舞台、倒计时开场、合成音效和滑动手势的贪吃蛇小游戏，打开网页就能直接开玩。",
+    labels: {
+      score: "当前分数",
+      best: "历史最高",
+      speedLevel: "速度等级",
+      status: "游戏状态",
+    },
+    buttons: {
+      start: "开始 / 重开",
+      pause: "暂停",
+      resume: "继续",
+      soundOn: "音效：开",
+      soundOff: "音效：关",
+    },
+    controls: {
+      title: "操作说明",
+      items: [
+        "方向键 / WASD：控制方向",
+        "空格：暂停或继续",
+        "Enter：快速重新开始",
+        "手机端：直接在棋盘区域滑动即可转向",
+      ],
+    },
+    hints: {
+      title: "玩法提示",
+      items: [
+        "每吃到 5 个果实，速度就会提升一级。",
+        "撞墙或撞到自己就会结束本局。",
+        "开局会有倒计时动画，音效可随时开关。",
+      ],
+    },
+    settings: {
+      kicker: "Game Settings",
+      title: "游戏设置",
+      copy: "切换语言、棋盘显示大小、速度和音效，设置会自动保存。",
+      note: "语言和大小立即生效，速度会立刻影响当前节奏。",
+      languageLabel: "语言",
+      boardSizeLabel: "棋盘显示大小",
+      speedLabel: "速度档位",
+      soundLabel: "音效",
+    },
+    stage: {
+      kicker: "Neon Arena",
+      title: "冲刺舞台",
+      swipeHintDefault: "手机上可直接在棋盘区域滑动转向",
+      directionLabels: {
+        up: "向上",
+        down: "向下",
+        left: "向左",
+        right: "向右",
+      },
+      swipeHint(direction) {
+        return `${this.directionLabels[direction]}滑动，已就位`;
+      },
+    },
+    options: {
+      language: {
+        "zh-CN": "简体中文",
+        "en-US": "English",
+      },
+      boardSize: {
+        compact: "紧凑",
+        standard: "标准",
+        expanded: "扩展",
+      },
+      speed: {
+        relaxed: "轻松",
+        normal: "标准",
+        blitz: "疾速",
+      },
+      sound: {
+        on: "开启",
+        off: "关闭",
+      },
+    },
+    statuses: {
+      ready: "待开始",
+      countdown: "倒计时",
+      running: "进行中",
+      paused: "已暂停",
+      gameOver: "已结束",
+      win: "已通关",
+    },
+    overlay: {
+      readyTitle: "准备开始",
+      readyCopy: "按开始按钮、回车键，或直接在棋盘上滑动开始游戏。",
+      countdownIntroTitle: "准备冲刺",
+      countdownIntroCopy: "跟着倒计时起步，滑动、方向键和 WASD 都能控蛇。",
+      countdownSteps: [
+        { title: "3", copy: "稳住起步节奏" },
+        { title: "2", copy: "锁定你的线路" },
+        { title: "1", copy: "准备冲刺" },
+        { title: "GO!", copy: "Snake Surge" },
+      ],
+      pausedTitle: "暂停中",
+      pausedCopy: "按空格、暂停按钮，或点击中间控制键继续游戏。",
+      gameOverTitle: "游戏结束",
+      gameOverCopy(score) {
+        return `本局得分 ${score}，按开始按钮、Enter，或直接滑动重新开局。`;
+      },
+      winTitle: "完美通关",
+      winCopy(score) {
+        return `你已经铺满整个棋盘，最终得分 ${score}。`;
+      },
+    },
+  },
+  "en-US": {
+    htmlLang: "en-US",
+    pageTitle: "Snake Surge",
+    heroEyebrow: "Browser Game",
+    heroCopy:
+      "A neon snake game with a countdown intro, synth audio, swipe controls, and live settings for language, board size, and speed.",
+    labels: {
+      score: "Score",
+      best: "Best",
+      speedLevel: "Speed Level",
+      status: "Game State",
+    },
+    buttons: {
+      start: "Start / Restart",
+      pause: "Pause",
+      resume: "Resume",
+      soundOn: "Sound: On",
+      soundOff: "Sound: Off",
+    },
+    controls: {
+      title: "Controls",
+      items: [
+        "Arrow keys / WASD: steer the snake",
+        "Space: pause or resume",
+        "Enter: quick restart",
+        "On mobile, swipe directly on the board",
+      ],
+    },
+    hints: {
+      title: "Tips",
+      items: [
+        "The game speeds up every 5 fruits.",
+        "Hitting a wall or yourself ends the run.",
+        "The countdown intro and sound can both be adjusted.",
+      ],
+    },
+    settings: {
+      kicker: "Game Settings",
+      title: "Settings",
+      copy: "Change language, board size, speed, and sound. Everything saves automatically.",
+      note: "Language and board size apply instantly, and speed updates the current pace right away.",
+      languageLabel: "Language",
+      boardSizeLabel: "Board Size",
+      speedLabel: "Speed Preset",
+      soundLabel: "Sound",
+    },
+    stage: {
+      kicker: "Neon Arena",
+      title: "Sprint Stage",
+      swipeHintDefault: "Swipe directly on the board to steer on mobile",
+      directionLabels: {
+        up: "Up",
+        down: "Down",
+        left: "Left",
+        right: "Right",
+      },
+      swipeHint(direction) {
+        return `${this.directionLabels[direction]} swipe queued`;
+      },
+    },
+    options: {
+      language: {
+        "zh-CN": "简体中文",
+        "en-US": "English",
+      },
+      boardSize: {
+        compact: "Compact",
+        standard: "Standard",
+        expanded: "Expanded",
+      },
+      speed: {
+        relaxed: "Relaxed",
+        normal: "Normal",
+        blitz: "Blitz",
+      },
+      sound: {
+        on: "On",
+        off: "Off",
+      },
+    },
+    statuses: {
+      ready: "Ready",
+      countdown: "Countdown",
+      running: "Running",
+      paused: "Paused",
+      gameOver: "Game Over",
+      win: "Cleared",
+    },
+    overlay: {
+      readyTitle: "Ready to Launch",
+      readyCopy: "Press Start, hit Enter, or swipe on the board to begin.",
+      countdownIntroTitle: "Get Ready",
+      countdownIntroCopy: "Ride the countdown. Swipe, arrow keys, and WASD all work.",
+      countdownSteps: [
+        { title: "3", copy: "Lock in your rhythm" },
+        { title: "2", copy: "Pick your line" },
+        { title: "1", copy: "Sprint incoming" },
+        { title: "GO!", copy: "Snake Surge" },
+      ],
+      pausedTitle: "Paused",
+      pausedCopy: "Press Space, the pause button, or the center pad button to resume.",
+      gameOverTitle: "Game Over",
+      gameOverCopy(score) {
+        return `You scored ${score}. Press Start, hit Enter, or swipe to run it back.`;
+      },
+      winTitle: "Perfect Clear",
+      winCopy(score) {
+        return `You filled the entire board. Final score: ${score}.`;
+      },
+    },
+  },
 };
 
 const BACKGROUND_ORBS = Array.from({ length: 10 }, (_, index) => ({
@@ -61,9 +327,9 @@ let renderLoopId = null;
 let lastRenderTime = 0;
 let particles = [];
 let score = 0;
+let speedLevel = 1;
+let currentTickDelay = SPEED_PROFILES.normal.initial;
 let bestScore = Number(readStorage(BEST_SCORE_KEY, "0"));
-let soundEnabled = readStorage(SOUND_ENABLED_KEY, "true") !== "false";
-let speed = INITIAL_SPEED;
 let isRunning = false;
 let isPaused = false;
 let hasStarted = false;
@@ -72,10 +338,15 @@ let startSequenceId = 0;
 let audioContext = null;
 let touchStartPoint = null;
 let swipeHintTimeoutId = null;
+let statusKey = "ready";
+let overlayState = { mode: "ready", stepIndex: null };
 
 if (!Number.isFinite(bestScore)) {
   bestScore = 0;
 }
+
+const settings = loadSettings();
+let soundEnabled = settings.soundEnabled;
 
 const scoreCardElement = scoreElement.closest(".stat-card");
 const bestScoreCardElement = bestScoreElement.closest(".stat-card");
@@ -94,8 +365,89 @@ function writeStorage(key, value) {
   try {
     localStorage.setItem(key, value);
   } catch {
-    // Ignore storage errors for local-file previews or restricted modes.
+    // Ignore storage failures in restricted preview modes.
   }
+}
+
+function normalizeLanguage(value) {
+  return value === "en-US" ? "en-US" : "zh-CN";
+}
+
+function normalizeBoardSize(value) {
+  return ["compact", "standard", "expanded"].includes(value) ? value : "standard";
+}
+
+function normalizeSpeedPreset(value) {
+  return ["relaxed", "normal", "blitz"].includes(value) ? value : "normal";
+}
+
+function normalizeSoundValue(value, fallback = true) {
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  if (value === "on" || value === "true") {
+    return true;
+  }
+
+  if (value === "off" || value === "false") {
+    return false;
+  }
+
+  return fallback;
+}
+
+function loadSettings() {
+  const legacySound = normalizeSoundValue(readStorage(LEGACY_SOUND_ENABLED_KEY, "true"));
+  const defaults = {
+    language: "zh-CN",
+    boardSize: "standard",
+    speedPreset: "normal",
+    soundEnabled: legacySound,
+  };
+  const raw = readStorage(SETTINGS_KEY, "");
+
+  if (!raw) {
+    return defaults;
+  }
+
+  try {
+    const parsed = JSON.parse(raw);
+    return {
+      language: normalizeLanguage(parsed.language),
+      boardSize: normalizeBoardSize(parsed.boardSize),
+      speedPreset: normalizeSpeedPreset(parsed.speedPreset),
+      soundEnabled: normalizeSoundValue(parsed.soundEnabled, defaults.soundEnabled),
+    };
+  } catch {
+    return defaults;
+  }
+}
+
+function saveSettings() {
+  writeStorage(
+    SETTINGS_KEY,
+    JSON.stringify({
+      language: settings.language,
+      boardSize: settings.boardSize,
+      speedPreset: settings.speedPreset,
+      soundEnabled: settings.soundEnabled,
+    }),
+  );
+  writeStorage(LEGACY_SOUND_ENABLED_KEY, String(settings.soundEnabled));
+}
+
+function getText() {
+  return TEXT[settings.language];
+}
+
+function getSpeedProfile() {
+  return SPEED_PROFILES[settings.speedPreset] || SPEED_PROFILES.normal;
+}
+
+function getCurrentTickDelay() {
+  const profile = getSpeedProfile();
+  return Math.max(profile.min, profile.initial - (speedLevel - 1) * profile.step);
 }
 
 function wait(ms) {
@@ -112,12 +464,168 @@ function createStartingSnake() {
   ];
 }
 
+function showOverlayRaw(title, copy, countdownMode = false) {
+  overlayTitleElement.textContent = title;
+  overlayCopyElement.textContent = copy;
+  overlayElement.classList.toggle("countdown-mode", countdownMode);
+  overlayElement.classList.add("visible");
+}
+
+function hideOverlayRaw() {
+  overlayElement.classList.remove("visible", "countdown-mode", "pulse");
+}
+
+function setOverlayState(mode, options = {}) {
+  overlayState = {
+    mode,
+    stepIndex: null,
+    ...options,
+  };
+  renderOverlayState();
+}
+
+function renderOverlayState() {
+  const text = getText();
+
+  if (overlayState.mode === "hidden") {
+    hideOverlayRaw();
+    return;
+  }
+
+  if (overlayState.mode === "ready") {
+    showOverlayRaw(text.overlay.readyTitle, text.overlay.readyCopy);
+    return;
+  }
+
+  if (overlayState.mode === "countdown") {
+    if (typeof overlayState.stepIndex === "number") {
+      const step = text.overlay.countdownSteps[overlayState.stepIndex];
+      showOverlayRaw(step.title, step.copy, true);
+    } else {
+      showOverlayRaw(text.overlay.countdownIntroTitle, text.overlay.countdownIntroCopy, true);
+    }
+    return;
+  }
+
+  if (overlayState.mode === "paused") {
+    showOverlayRaw(text.overlay.pausedTitle, text.overlay.pausedCopy);
+    return;
+  }
+
+  if (overlayState.mode === "gameOver") {
+    showOverlayRaw(text.overlay.gameOverTitle, text.overlay.gameOverCopy(score));
+    return;
+  }
+
+  if (overlayState.mode === "win") {
+    showOverlayRaw(text.overlay.winTitle, text.overlay.winCopy(score));
+  }
+}
+
+function pulseOverlay() {
+  overlayElement.classList.remove("pulse");
+  void overlayElement.offsetWidth;
+  overlayElement.classList.add("pulse");
+}
+
+function setStatusKey(nextStatusKey) {
+  statusKey = nextStatusKey;
+  statusTextElement.textContent = getText().statuses[nextStatusKey];
+}
+
+function populateSelect(selectElement, options, value) {
+  const fragment = document.createDocumentFragment();
+
+  Object.entries(options).forEach(([optionValue, optionLabel]) => {
+    const option = document.createElement("option");
+    option.value = optionValue;
+    option.textContent = optionLabel;
+    fragment.appendChild(option);
+  });
+
+  selectElement.replaceChildren(fragment);
+  selectElement.value = value;
+}
+
+function syncSettingsControls() {
+  languageSelect.value = settings.language;
+  boardSizeSelect.value = settings.boardSize;
+  speedSelect.value = settings.speedPreset;
+  soundSelect.value = settings.soundEnabled ? "on" : "off";
+}
+
+function applyBoardSizeSetting() {
+  document.body.dataset.boardSize = settings.boardSize;
+}
+
+function renderLocalizedContent() {
+  const text = getText();
+
+  document.documentElement.lang = text.htmlLang;
+  document.title = text.pageTitle;
+  heroEyebrowElement.textContent = text.heroEyebrow;
+  heroCopyElement.textContent = text.heroCopy;
+  scoreLabelElement.textContent = text.labels.score;
+  bestScoreLabelElement.textContent = text.labels.best;
+  speedLevelLabelElement.textContent = text.labels.speedLevel;
+  statusLabelElement.textContent = text.labels.status;
+  controlsHeadingElement.textContent = text.controls.title;
+  hintHeadingElement.textContent = text.hints.title;
+  settingsKickerElement.textContent = text.settings.kicker;
+  settingsTitleElement.textContent = text.settings.title;
+  settingsCopyElement.textContent = text.settings.copy;
+  settingsNoteElement.textContent = text.settings.note;
+  languageSettingLabelElement.textContent = text.settings.languageLabel;
+  sizeSettingLabelElement.textContent = text.settings.boardSizeLabel;
+  speedSettingLabelElement.textContent = text.settings.speedLabel;
+  soundSettingLabelElement.textContent = text.settings.soundLabel;
+  stageKickerElement.textContent = text.stage.kicker;
+  stageTitleElement.textContent = text.stage.title;
+  startButton.textContent = text.buttons.start;
+
+  controlTipElements.forEach((element, index) => {
+    element.textContent = text.controls.items[index];
+  });
+
+  hintTipElements.forEach((element, index) => {
+    element.textContent = text.hints.items[index];
+  });
+
+  populateSelect(languageSelect, text.options.language, settings.language);
+  populateSelect(boardSizeSelect, text.options.boardSize, settings.boardSize);
+  populateSelect(speedSelect, text.options.speed, settings.speedPreset);
+  populateSelect(soundSelect, text.options.sound, settings.soundEnabled ? "on" : "off");
+  syncSettingsControls();
+
+  if (!swipeHintElement.classList.contains("flash")) {
+    swipeHintElement.textContent = text.stage.swipeHintDefault;
+  }
+
+  setStatusKey(statusKey);
+  renderOverlayState();
+  updateHud();
+}
+
+function applySettings() {
+  soundEnabled = settings.soundEnabled;
+  applyBoardSizeSetting();
+  currentTickDelay = getCurrentTickDelay();
+
+  if (isRunning && !isPaused && !isCountingDown) {
+    restartLoop();
+  }
+
+  renderLocalizedContent();
+  saveSettings();
+}
+
 function resetGameState() {
   snake = createStartingSnake();
   direction = DIRECTIONS.right;
   nextDirection = DIRECTIONS.right;
   score = 0;
-  speed = INITIAL_SPEED;
+  speedLevel = 1;
+  currentTickDelay = getCurrentTickDelay();
   isPaused = false;
   particles = [];
   food = spawnFood();
@@ -143,29 +651,24 @@ async function startGame(initialDirectionName = null) {
   isRunning = false;
   isPaused = false;
   isCountingDown = true;
-  setStatus("倒计时");
+  setStatusKey("countdown");
   updateHud();
-  showOverlay("准备冲刺", "跟着倒计时起步，滑动、方向键和 WASD 都能控蛇。", true);
+  setOverlayState("countdown");
   canvasFrame.classList.add("starting");
   pulseElement(statusCardElement, "is-bumped");
   pulseOverlay();
 
-  const steps = [
-    { title: "3", copy: "稳住起步节奏", delay: 520 },
-    { title: "2", copy: "锁定你的线路", delay: 520 },
-    { title: "1", copy: "准备冲刺", delay: 520 },
-    { title: "GO!", copy: "Snake Surge", delay: 320 },
-  ];
+  const steps = getText().overlay.countdownSteps;
 
-  for (const step of steps) {
+  for (let index = 0; index < steps.length; index += 1) {
     if (sequenceId !== startSequenceId) {
       return;
     }
 
-    showOverlay(step.title, step.copy, true);
+    setOverlayState("countdown", { stepIndex: index });
     pulseOverlay();
-    playCountdownSound(step.title);
-    await wait(step.delay);
+    playCountdownSound(steps[index].title);
+    await wait(index === steps.length - 1 ? 320 : 520);
   }
 
   if (sequenceId !== startSequenceId) {
@@ -174,9 +677,9 @@ async function startGame(initialDirectionName = null) {
 
   isCountingDown = false;
   isRunning = true;
-  setStatus("进行中");
+  setStatusKey("running");
   updateHud();
-  hideOverlay();
+  setOverlayState("hidden");
   canvasFrame.classList.remove("starting");
   triggerFrameEffect("flash");
   spawnParticles(canvas.width / 2, canvas.height / 2, {
@@ -191,7 +694,7 @@ async function startGame(initialDirectionName = null) {
 
 function startLoop() {
   clearLoop();
-  loopId = window.setInterval(tick, speed);
+  loopId = window.setInterval(tick, currentTickDelay);
 }
 
 function clearLoop() {
@@ -204,45 +707,23 @@ function clearLoop() {
 function restartLoop() {
   clearLoop();
   if (isRunning && !isPaused && !isCountingDown) {
-    loopId = window.setInterval(tick, speed);
+    loopId = window.setInterval(tick, currentTickDelay);
   }
 }
 
 function updateHud() {
+  const text = getText();
+
   scoreElement.textContent = String(score);
   bestScoreElement.textContent = String(bestScore);
-  speedLevelElement.textContent = String(getSpeedLevel());
+  speedLevelElement.textContent = String(speedLevel);
   pauseButton.disabled = !hasStarted || !isRunning || isCountingDown;
-  pauseButton.textContent = isPaused ? "继续" : "暂停";
-  soundButton.textContent = soundEnabled ? "音效：开" : "音效：关";
+  pauseButton.textContent = isPaused ? text.buttons.resume : text.buttons.pause;
+  soundButton.textContent = soundEnabled ? text.buttons.soundOn : text.buttons.soundOff;
   soundButton.classList.toggle("sound-off", !soundEnabled);
+  soundSelect.value = soundEnabled ? "on" : "off";
   document.body.classList.toggle("game-running", isRunning && !isPaused);
   document.body.classList.toggle("game-countdown", isCountingDown);
-}
-
-function getSpeedLevel() {
-  return Math.floor((INITIAL_SPEED - speed) / SPEED_STEP) + 1;
-}
-
-function setStatus(text) {
-  statusTextElement.textContent = text;
-}
-
-function showOverlay(title, copy, countdownMode = false) {
-  overlayTitleElement.textContent = title;
-  overlayCopyElement.textContent = copy;
-  overlayElement.classList.toggle("countdown-mode", countdownMode);
-  overlayElement.classList.add("visible");
-}
-
-function hideOverlay() {
-  overlayElement.classList.remove("visible", "countdown-mode", "pulse");
-}
-
-function pulseOverlay() {
-  overlayElement.classList.remove("pulse");
-  void overlayElement.offsetWidth;
-  overlayElement.classList.add("pulse");
 }
 
 function spawnFood() {
@@ -330,7 +811,8 @@ function handleEatFood() {
   });
 
   if (score % 5 === 0) {
-    speed = Math.max(MIN_SPEED, speed - SPEED_STEP);
+    speedLevel += 1;
+    currentTickDelay = getCurrentTickDelay();
     pulseElement(speedCardElement, "is-bumped");
     restartLoop();
   }
@@ -352,9 +834,9 @@ function endGame() {
   isCountingDown = false;
   clearLoop();
   updateHud();
-  setStatus("已结束");
+  setStatusKey("gameOver");
   pulseElement(statusCardElement, "is-bumped");
-  showOverlay("游戏结束", `本局得分 ${score}，按开始按钮、Enter，或直接滑动重新开局。`);
+  setOverlayState("gameOver");
   triggerFrameEffect("impact");
   spawnCellBurst(snake[0].x, snake[0].y, {
     color: "rgba(255, 107, 107, 0.92)",
@@ -372,9 +854,9 @@ function winGame() {
   isCountingDown = false;
   clearLoop();
   updateHud();
-  setStatus("已通关");
+  setStatusKey("win");
   pulseElement(statusCardElement, "is-bumped");
-  showOverlay("完美通关", `你已经铺满整个棋盘，最终得分 ${score}。`);
+  setOverlayState("win");
   triggerFrameEffect("flash");
   spawnParticles(canvas.width / 2, canvas.height / 2, {
     color: "rgba(255, 209, 102, 0.95)",
@@ -395,16 +877,16 @@ async function togglePause() {
 
   if (isPaused) {
     isPaused = false;
-    setStatus("进行中");
-    hideOverlay();
+    setStatusKey("running");
+    setOverlayState("hidden");
     startLoop();
     playResumeSound();
     triggerFrameEffect("flash");
   } else {
     isPaused = true;
     clearLoop();
-    setStatus("已暂停");
-    showOverlay("暂停中", "按空格、暂停按钮，或点击中间控制键继续游戏。");
+    setStatusKey("paused");
+    setOverlayState("paused");
     playPauseSound();
   }
 
@@ -577,9 +1059,7 @@ function playResumeSound() {
 }
 
 function playWinSound() {
-  const notes = [523.25, 659.25, 783.99, 1046.5];
-
-  notes.forEach((frequency, index) => {
+  [523.25, 659.25, 783.99, 1046.5].forEach((frequency, index) => {
     playTone({
       frequency,
       duration: 0.16,
@@ -591,11 +1071,12 @@ function playWinSound() {
   });
 }
 
-function toggleSound() {
-  const nextValue = !soundEnabled;
-  soundEnabled = nextValue;
-  writeStorage(SOUND_ENABLED_KEY, String(nextValue));
+function setSoundEnabled(enabled) {
+  settings.soundEnabled = Boolean(enabled);
+  soundEnabled = settings.soundEnabled;
+  syncSettingsControls();
   updateHud();
+  saveSettings();
 
   if (soundEnabled) {
     primeAudio().then(() => {
@@ -608,6 +1089,10 @@ function toggleSound() {
       });
     });
   }
+}
+
+function toggleSound() {
+  setSoundEnabled(!settings.soundEnabled);
 }
 
 function startRenderLoop() {
@@ -882,6 +1367,10 @@ function setDirectionByName(name) {
 }
 
 function handleKeydown(event) {
+  if (event.target instanceof HTMLSelectElement) {
+    return;
+  }
+
   const key = event.key.toLowerCase();
 
   if (key === "enter") {
@@ -914,12 +1403,9 @@ function handleKeydown(event) {
   }
 }
 
-function flashSwipeHint(message) {
-  if (!swipeHintElement) {
-    return;
-  }
-
-  swipeHintElement.textContent = message;
+function flashSwipeHint(directionName) {
+  const text = getText();
+  swipeHintElement.textContent = text.stage.swipeHint(directionName);
   swipeHintElement.classList.remove("flash");
   void swipeHintElement.offsetWidth;
   swipeHintElement.classList.add("flash");
@@ -929,7 +1415,7 @@ function flashSwipeHint(message) {
   }
 
   swipeHintTimeoutId = window.setTimeout(() => {
-    swipeHintElement.textContent = DEFAULT_SWIPE_HINT;
+    swipeHintElement.textContent = getText().stage.swipeHintDefault;
     swipeHintElement.classList.remove("flash");
   }, 850);
 }
@@ -1007,11 +1493,31 @@ function handleTouchEnd(event) {
       : "up";
 
   setDirectionByName(directionName);
-  flashSwipeHint(`${DIRECTION_LABELS[directionName]}滑动，已就位`);
+  flashSwipeHint(directionName);
 }
 
 function handleTouchCancel() {
   touchStartPoint = null;
+}
+
+function handleLanguageChange(event) {
+  settings.language = normalizeLanguage(event.target.value);
+  applySettings();
+}
+
+function handleBoardSizeChange(event) {
+  settings.boardSize = normalizeBoardSize(event.target.value);
+  applySettings();
+}
+
+function handleSpeedChange(event) {
+  settings.speedPreset = normalizeSpeedPreset(event.target.value);
+  currentTickDelay = getCurrentTickDelay();
+  applySettings();
+}
+
+function handleSoundSelectChange(event) {
+  setSoundEnabled(event.target.value === "on");
 }
 
 function bindEvents() {
@@ -1027,6 +1533,10 @@ function bindEvents() {
     toggleSound();
   });
 
+  languageSelect.addEventListener("change", handleLanguageChange);
+  boardSizeSelect.addEventListener("change", handleBoardSizeChange);
+  speedSelect.addEventListener("change", handleSpeedChange);
+  soundSelect.addEventListener("change", handleSoundSelectChange);
   document.addEventListener("keydown", handleKeydown);
 
   document.querySelectorAll("[data-direction]").forEach((button) => {
@@ -1051,9 +1561,12 @@ function bindEvents() {
 function initialize() {
   snake = createStartingSnake();
   food = spawnFood();
+  currentTickDelay = getCurrentTickDelay();
+  setStatusKey("ready");
+  setOverlayState("ready");
+  applyBoardSizeSetting();
+  renderLocalizedContent();
   updateHud();
-  setStatus("待开始");
-  showOverlay("准备开始", "按开始按钮、回车键，或直接在棋盘上滑动开始游戏。");
   startRenderLoop();
   bindEvents();
 }

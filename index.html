@@ -9,9 +9,9 @@
   <body>
     <main class="app-shell">
       <section class="hero">
-        <p class="eyebrow">Browser Game</p>
+        <p id="hero-eyebrow" class="eyebrow">Browser Game</p>
         <h1>Snake Surge</h1>
-        <p class="hero-copy">
+        <p id="hero-copy" class="hero-copy">
           一个带霓虹舞台、倒计时开场、合成音效和滑动手势的贪吃蛇小游戏，打开网页就能直接开玩。
         </p>
       </section>
@@ -20,19 +20,19 @@
         <aside class="panel info-panel">
           <div class="stat-grid">
             <article class="stat-card">
-              <span class="stat-label">当前分数</span>
+              <span id="score-label" class="stat-label">当前分数</span>
               <strong id="score">0</strong>
             </article>
             <article class="stat-card">
-              <span class="stat-label">历史最高</span>
+              <span id="best-score-label" class="stat-label">历史最高</span>
               <strong id="best-score">0</strong>
             </article>
             <article class="stat-card">
-              <span class="stat-label">速度等级</span>
+              <span id="speed-level-label" class="stat-label">速度等级</span>
               <strong id="speed-level">1</strong>
             </article>
             <article class="stat-card">
-              <span class="stat-label">游戏状态</span>
+              <span id="status-label" class="stat-label">游戏状态</span>
               <strong id="status-text">待开始</strong>
             </article>
           </div>
@@ -44,26 +44,62 @@
           </div>
 
           <div class="tips">
-            <h2>操作说明</h2>
-            <p>方向键 / WASD：控制方向</p>
-            <p>空格：暂停或继续</p>
-            <p>Enter：快速重新开始</p>
-            <p>手机端：直接在棋盘区域滑动即可转向</p>
+            <h2 id="controls-heading">操作说明</h2>
+            <p id="control-tip-1">方向键 / WASD：控制方向</p>
+            <p id="control-tip-2">空格：暂停或继续</p>
+            <p id="control-tip-3">Enter：快速重新开始</p>
+            <p id="control-tip-4">手机端：直接在棋盘区域滑动即可转向</p>
           </div>
 
           <div class="tips">
-            <h2>玩法提示</h2>
-            <p>每吃到 5 个果实，速度就会提升一级。</p>
-            <p>撞墙或撞到自己就会结束本局。</p>
-            <p>开局会有倒计时动画，音效可随时开关。</p>
+            <h2 id="hint-heading">玩法提示</h2>
+            <p id="hint-tip-1">每吃到 5 个果实，速度就会提升一级。</p>
+            <p id="hint-tip-2">撞墙或撞到自己就会结束本局。</p>
+            <p id="hint-tip-3">开局会有倒计时动画，音效可随时开关。</p>
           </div>
+
+          <section class="settings-card">
+            <div class="settings-head">
+              <p id="settings-kicker" class="settings-kicker">Game Settings</p>
+              <h2 id="settings-title">游戏设置</h2>
+              <p id="settings-copy" class="settings-copy">
+                切换语言、棋盘显示大小、速度和音效，设置会自动保存。
+              </p>
+            </div>
+
+            <div class="settings-grid">
+              <label class="setting-field" for="language-select">
+                <span id="language-setting-label" class="setting-label">语言</span>
+                <select id="language-select" class="setting-select"></select>
+              </label>
+
+              <label class="setting-field" for="board-size-select">
+                <span id="size-setting-label" class="setting-label">棋盘显示大小</span>
+                <select id="board-size-select" class="setting-select"></select>
+              </label>
+
+              <label class="setting-field" for="speed-select">
+                <span id="speed-setting-label" class="setting-label">速度档位</span>
+                <select id="speed-select" class="setting-select"></select>
+              </label>
+
+              <label class="setting-field" for="sound-select">
+                <span id="sound-setting-label" class="setting-label">音效</span>
+                <select id="sound-select" class="setting-select"></select>
+              </label>
+            </div>
+
+            <p id="settings-note" class="settings-note">
+              语言和大小立即生效，速度会立刻影响当前节奏。
+            </p>
+          </section>
         </aside>
 
         <section class="panel stage-panel">
           <div class="stage-meta">
             <div>
-              <p class="stage-kicker">Neon Arena</p>
-              <h2>冲刺舞台</h2>
+              <p id="stage-kicker" class="stage-kicker">Neon Arena</p>
+              <h2 id="stage-title">冲刺舞台</h2>
             </div>
             <p id="swipe-hint" class="swipe-hint">手机上可直接在棋盘区域滑动转向</p>
           </div>
